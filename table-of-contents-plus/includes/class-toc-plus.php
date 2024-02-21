@@ -59,6 +59,7 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 				'sitemap_categories'                 => 'Categories',
 				'show_toc_in_widget_only'            => false,
 				'show_toc_in_widget_only_post_types' => [ 'page' ],
+				'rest_toc_output'                    => false,
 			];
 
 			$options       = get_option( 'toc-options', $defaults );
@@ -168,8 +169,6 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 				$attributes
 			);
 
-			$re_enqueue_scripts = false;
-
 			if ( $atts['no_label'] ) {
 				$this->options['show_heading_text'] = false;
 			}
@@ -178,11 +177,9 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 			}
 			if ( $atts['label_show'] ) {
 				$this->options['visibility_show'] = wp_kses_post( html_entity_decode( $atts['label_show'] ) );
-				$re_enqueue_scripts               = true;
 			}
 			if ( $atts['label_hide'] ) {
 				$this->options['visibility_hide'] = wp_kses_post( html_entity_decode( $atts['label_hide'] ) );
-				$re_enqueue_scripts               = true;
 			}
 			if ( $atts['class'] ) {
 				$this->options['css_container_class'] = wp_kses_post( html_entity_decode( $atts['class'] ) );
@@ -207,7 +204,6 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 			}
 			if ( $atts['collapse'] ) {
 				$this->options['visibility_hide_by_default'] = true;
-				$re_enqueue_scripts                          = true;
 			}
 
 			if ( $atts['no_numbers'] ) {
@@ -216,10 +212,6 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 
 			if ( is_numeric( $atts['start'] ) ) {
 				$this->options['start'] = $atts['start'];
-			}
-
-			if ( $re_enqueue_scripts ) {
-				do_action( 'wp_enqueue_scripts' );
 			}
 
 			// if $atts['heading_levels'] is an array, then it came from the global options
@@ -446,14 +438,19 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 
 
 		/**
-		 * Register and load CSS and javascript files for frontend.
+		 * Register CSS and javascript files for frontend.
 		 */
 		public function wp_enqueue_scripts() {
-			$js_vars = [];
-
-			// register our CSS and scripts
 			wp_register_style( 'toc-screen', TOC_PLUGIN_PATH . '/screen.min.css', [], TOC_VERSION );
 			wp_register_script( 'toc-front', TOC_PLUGIN_PATH . '/front.min.js', [ 'jquery' ], TOC_VERSION, true );
+		}
+
+
+		/** 
+		 * Output CSS and JS files for frontend.
+		 */
+		private function do_wp_enqueue_scripts() {
+			$js_vars = [];
 
 			// enqueue them!
 			if ( ! $this->options['exclude_css'] ) {
@@ -677,6 +674,7 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 					'sitemap_heading_type'          => intval( $_POST['sitemap_heading_type'] ),
 					'sitemap_pages'                 => stripslashes( trim( $_POST['sitemap_pages'] ) ),
 					'sitemap_categories'            => stripslashes( trim( $_POST['sitemap_categories'] ) ),
+					'rest_toc_output'               => ( isset( $_POST['rest_toc_output'] ) && $_POST['rest_toc_output'] ) ? true : false,
 				]
 			);
 
@@ -710,7 +708,7 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 <ul id="tabbed-nav">
 	<li><a href="#tab1"><?php esc_html_e( 'Main Options', 'table-of-contents-plus' ); ?></a></li>
 	<li><a href="#tab2"><?php esc_html_e( 'Sitemap', 'table-of-contents-plus' ); ?></a></li>
-	<li class="url"><a href="http://dublue.com/plugins/toc/#Help"><?php esc_html_e( 'Help', 'table-of-contents-plus' ); ?></a></li>
+	<li class="url"><a href="https://zedzedzed.github.io/docs/tocplus.html"><?php esc_html_e( 'Help', 'table-of-contents-plus' ); ?></a></li>
 </ul>
 <div class="tab_container">
 	<div id="tab1" class="tab_content">
@@ -1078,6 +1076,10 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 			/* translators: example anchor prefixes when no ascii characters match */
 			esc_html_e( 'Eg: i, toc_index, index, _', 'table-of-contents-plus' ); ?></span></label>
 		</td>
+	</tr>
+	<tr>
+		<th><label for="rest_toc_output"><?php esc_html_e( 'Include in REST requests', 'table-of-contents-plus' ); ?></label></th>
+		<td><input type="checkbox" value="1" id="rest_toc_output" name="rest_toc_output"<?php if ( $this->options['rest_toc_output'] ) echo ' checked="checked"'; ?> /><label for="rest_toc_output"> <?php esc_html_e( 'Allow the table of contents to be included in the output of REST API requests.', 'table-of-contents-plus' ); ?></label></td>
 	</tr>
 	</tbody>
 	</table>
@@ -1525,12 +1527,19 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 		/**
 		 * Returns true if the table of contents is eligible to be printed, false otherwise.
 		 */
-		public function is_eligible( $shortcode_used = false ) {
+		public function is_eligible() {
 			global $post;
 
-			// do not trigger the TOC on REST Requests
-			if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-				return false;
+			$custom_toc_position = strpos( $post->content, '[TOC]' );
+
+			// Do not trigger the TOC on REST Requests unless explicitly enabled.
+			// This ensures that the TOC is not included in REST API responses by default.
+			// If the TOC inclusion in REST API responses is desired, 
+			// it must be specifically activated via the plugin settings.
+			if ( ! $this->options['rest_toc_output'] ) {
+				if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+					return false;
+				}
 			}
 			
 			// do not trigger the TOC when displaying an XML/RSS feed
@@ -1539,7 +1548,7 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 			}
 
 			// if the shortcode was used, this bypasses many of the global options
-			if ( false !== $shortcode_used ) {
+			if ( false !== $custom_toc_position ) {
 				// shortcode is used, make sure it adheres to the exclude from
 				// homepage option if we're on the homepage
 				if ( ! $this->options['include_homepage'] && is_front_page() ) {
@@ -1577,7 +1586,9 @@ if ( ! class_exists( 'TOC_Plus' ) ) :
 			$replace             = [];
 			$custom_toc_position = strpos( $content, '<!--TOC-->' );
 
-			if ( $this->is_eligible( $custom_toc_position ) ) {
+			if ( $this->is_eligible() ) {
+
+				$this->do_wp_enqueue_scripts();
 
 				$items = $this->extract_headings( $find, $replace, $content );
 
