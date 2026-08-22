@@ -60,7 +60,7 @@ class Helpers {
 		// Generate the new arguments.
 		$args = [
 			'utm_source'   => 'WordPress',
-			'utm_campaign' => 'plugin',
+			'utm_campaign' => 'toc-plugin',
 			'utm_medium'   => $medium
 		];
 

@@ -47,17 +47,17 @@ trait Vue {
 
 		$this->vueData = [
 			// The following data is needed on all screens.
-			'wpVersion'           => $wp_version,
-			'page'                => $currentPage,
-			'screen'              => aioseoTableOfContents()->helpers->getCurrentScreen(),
-			'internalOptions'     => aioseoTableOfContents()->internalOptions->all(),
-			'options'             => aioseoTableOfContents()->options->all(),
-			'settings'            => aioseoTableOfContents()->vueSettings->all(),
-			'tocSettings'         => aioseoTableOfContents()->standalone->frontend->get_options(),
-			'tocPostTypes'        => Api\TocSettings::getPostTypes(),
-			'notifications'       => array_merge( Models\Notification::getNotifications( false ), [ 'force' => $showNotificationsDrawer ] ),
-			'helpPanel'           => [],
-			'urls'                => [
+			'wpVersion'                    => $wp_version,
+			'page'                         => $currentPage,
+			'screen'                       => aioseoTableOfContents()->helpers->getCurrentScreen(),
+			'internalOptions'              => aioseoTableOfContents()->internalOptions->all(),
+			'options'                      => aioseoTableOfContents()->options->all(),
+			'settings'                     => aioseoTableOfContents()->vueSettings->all(),
+			'tocSettings'                  => aioseoTableOfContents()->standalone->frontend->get_options(),
+			'tocPostTypes'                 => Api\TocSettings::getPostTypes(),
+			'notifications'                => array_merge( Models\Notification::getNotifications( false ), [ 'force' => $showNotificationsDrawer ] ),
+			'helpPanel'                    => [],
+			'urls'                         => [
 				'domain'        => $this->getSiteDomain(),
 				'mainSiteUrl'   => $this->getSiteUrl(),
 				'home'          => home_url(),
@@ -68,15 +68,20 @@ trait Vue {
 				'marketingSite' => $this->getMarketingSiteUrl(),
 				'connect'       => admin_url( 'index.php?page=table-of-contents-connect' )
 			],
-			'isDev'               => $this->isDev(),
-			'isAioseoActive'      => function_exists( 'aioseo' ),
-			'isSsl'               => is_ssl(),
-			'isMultisite'         => is_multisite(),
-			'isNetworkAdmin'      => is_network_admin(),
-			'mainSite'            => is_main_site(),
-			'hasUrlTrailingSlash' => '/' === user_trailingslashit( '' ),
-			'nonce'               => wp_create_nonce( 'wp_rest' ),
-			'translations'        => $this->getJedLocaleData( 'table-of-contents-plus' )
+			'isDev'                        => $this->isDev(),
+			'isAioseoActive'               => function_exists( 'aioseo' ),
+			'isAioseoInstalled'            => file_exists( WP_PLUGIN_DIR . '/all-in-one-seo-pack/all_in_one_seo_pack.php' )
+				|| file_exists( WP_PLUGIN_DIR . '/all-in-one-seo-pack-pro/all_in_one_seo_pack.php' ),
+			'isBrokenLinkCheckerActive'    => function_exists( 'aioseoBrokenLinkChecker' ),
+			'isBrokenLinkCheckerInstalled' => file_exists( WP_PLUGIN_DIR . '/broken-link-checker-seo/aioseo-broken-link-checker.php' )
+				|| file_exists( WP_PLUGIN_DIR . '/aioseo-broken-link-checker/aioseo-broken-link-checker.php' ),
+			'isSsl'                        => is_ssl(),
+			'isMultisite'                  => is_multisite(),
+			'isNetworkAdmin'               => is_network_admin(),
+			'mainSite'                     => is_main_site(),
+			'hasUrlTrailingSlash'          => '/' === user_trailingslashit( '' ),
+			'nonce'                        => wp_create_nonce( 'wp_rest' ),
+			'translations'                 => $this->getJedLocaleData( 'table-of-contents-plus' )
 		];
 
 		// In multisite, super admins may not have explicit roles on subsites.
@@ -103,7 +108,6 @@ trait Vue {
 
 		switch ( $currentPage ) {
 			case 'about':
-			case 'seo':
 				$this->addAboutData();
 				break;
 			default:

@@ -5,7 +5,7 @@
  * Description: A powerful yet user friendly plugin that automatically creates a table of contents. Can also output a sitemap listing all pages and categories.
  * Author:      All in One SEO Team
  * Author URI:  https://aioseo.com
- * Version:     202607
+ * Version:     202608.2
  * Requires at least: 5.7
  * Requires PHP: 7.4
  * Text Domain: table-of-contents-plus

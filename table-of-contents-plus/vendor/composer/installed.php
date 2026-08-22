@@ -3,7 +3,7 @@
         'name' => 'awesomemotive/aioseo-table-of-contents-plus',
         'pretty_version' => 'dev-develop',
         'version' => 'dev-develop',
-        'reference' => '9191c3aa833d1516e3e696c1da775c1bdf81259d',
+        'reference' => '651f1ef82d4629f62904351022d4319e071df4ae',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'awesomemotive/aioseo-table-of-contents-plus' => array(
             'pretty_version' => 'dev-develop',
             'version' => 'dev-develop',
-            'reference' => '9191c3aa833d1516e3e696c1da775c1bdf81259d',
+            'reference' => '651f1ef82d4629f62904351022d4319e071df4ae',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

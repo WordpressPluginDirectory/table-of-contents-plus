@@ -121,7 +121,7 @@ class Admin {
 			'manage_options',
 			$this->pageSlug,
 			[ $this, 'renderMenuPage' ],
-			'dashicons-list-view'
+			'data:image/svg+xml;base64,' . base64_encode( $this->getMenuIcon() )
 		);
 
 		add_action( "load-{$hook}", [ $this, 'checkCurrentPage' ] );
@@ -138,6 +138,18 @@ class Admin {
 	 */
 	public function renderMenuPage() {
 		echo '<div id="table-of-contents-plus-app"></div>';
+	}
+
+
+	/**
+	 * Returns the branded menu icon (anchor badge) as SVG markup.
+	 *
+	 * @since 202608.2
+	 *
+	 * @return string The SVG markup.
+	 */
+	private function getMenuIcon() {
+		return '<svg width="20" height="20" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M64 128C99.3462 128 128 99.3462 128 64C128 28.6538 99.3462 0 64 0C28.6538 0 0 28.6538 0 64C0 99.3462 28.6538 128 64 128Z M64.1538 25.5384C67.5385 25.5384 70.6154 26.7692 72.9231 29.3846C75.2308 31.6923 76.3077 34.6153 76.4615 37.8461V38.4615C76.4615 41.2307 75.6923 43.6923 74.1538 45.8461C72.9231 47.5384 71.3846 48.923 69.5385 49.8461V52.923H76.3077C78.3077 52.923 80 54.6153 80 56.6153V60.6153C80 62.6153 78.3077 64.3077 76.3077 64.3077H69.5385V89.2307C72.3077 88.6153 74.9231 87.3846 77.5385 85.8461C80.3077 84.1538 82.4615 82.1538 83.8461 80L80.9231 76.923C79.3846 75.3846 79.5385 72.7692 81.3846 71.3846L91.2308 63.6923C93.6923 61.8461 97.0769 63.5384 97.0769 66.6153V74.1538C97.0769 78 96 81.6923 93.8461 85.0769C91.8461 88.3076 89.0769 91.2307 86 93.5384C82.7692 96 79.2308 97.8461 75.3846 99.2307C71.5385 100.615 67.6923 101.385 63.8461 101.385C60 101.385 56.3077 100.615 52.3077 99.2307C48.4615 97.8461 44.9231 96 41.6923 93.5384C38.4615 91.0769 35.8461 88.3076 33.8461 85.0769C31.6923 81.6923 30.6154 78 30.6154 74.1538V66.6153C30.6154 63.5384 34 61.8461 36.4615 63.6923L46.3077 71.3846C48 72.7692 48.1538 75.3846 46.7692 76.923L43.8461 80C45.3846 82.1538 47.3846 84 50.1538 85.8461C52.7692 87.3846 55.5385 88.6153 58.1538 89.2307V64.4615H51.3846C49.3846 64.4615 47.6923 62.7692 47.6923 60.7692V56.7692C47.6923 54.7692 49.3846 53.0769 51.3846 53.0769H58.4615V50C56.6154 49.0769 55.0769 47.6923 53.8461 46C52.3077 44 51.5385 41.5384 51.5385 39.0769V38.6153C51.5385 35.0769 52.7692 32 55.0769 29.5384C57.6923 26.923 60.6154 25.5384 64.1538 25.5384ZM64.1538 34.1538C62.9231 34.1538 62 34.6153 61.2308 35.3846C60.4615 36.1538 60 37.2307 60 38.4615C60 39.6923 60.4615 40.7692 61.2308 41.5384C62 42.3077 62.9231 42.7692 64.1538 42.7692C65.3846 42.7692 66.3077 42.3077 67.0769 41.5384C67.8461 40.7692 68.3077 39.6923 68.3077 38.4615C68.3077 37.2307 67.8461 36.1538 67.0769 35.3846C66.3077 34.6153 65.3846 34.1538 64.1538 34.1538Z" fill="#a7aaad"/></svg>'; // phpcs:ignore Generic.Files.LineLength.MaxExceeded
 	}
 
 	/**
@@ -171,43 +183,6 @@ class Admin {
 		$this->pages[] = $this->pageSlug . '-about';
 
 		add_action( "load-{$hook}", [ $this, 'checkCurrentPage' ] );
-
-		// Hidden page (no menu item) that lets users install/activate AIOSEO.
-		// Reached from the "Get AIOSEO" banner; redirects to AIOSEO when it's already active.
-		if ( current_user_can( 'install_plugins' ) ) {
-			$hook = add_submenu_page(
-				'',
-				__( 'Get AIOSEO', 'table-of-contents-plus' ),
-				__( 'Get AIOSEO', 'table-of-contents-plus' ),
-				'install_plugins',
-				$this->pageSlug . '-seo',
-				[ $this, 'renderMenuPage' ]
-			);
-
-			$this->pages[] = $this->pageSlug . '-seo';
-
-			add_action( "load-{$hook}", [ $this, 'maybeRedirectToAioseo' ] );
-		}
-	}
-
-	/**
-	 * Redirects to the AIOSEO settings when it is active, otherwise loads the install landing page.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return void
-	 */
-	public function maybeRedirectToAioseo() {
-		if ( function_exists( 'aioseo' ) ) {
-			wp_safe_redirect( admin_url( 'admin.php?page=aioseo-settings' ) );
-			exit;
-		}
-
-		// This page has no menu entry, so WordPress has no title to render for it.
-		// Set one so core doesn't pass null to strip_tags() when building the <title>.
-		$GLOBALS['title'] = __( 'Get AIOSEO', 'table-of-contents-plus' );
-
-		$this->checkCurrentPage();
 	}
 
 	/**
@@ -226,8 +201,7 @@ class Admin {
 		}
 
 		$pages = [
-			'about',
-			'seo'
+			'about'
 		];
 
 		foreach ( $pages as $page ) {
@@ -332,7 +306,7 @@ class Admin {
 			],
 			'review'          => [
 				'label' => $reviewLabel,
-				'url'   => aioseoTableOfContents()->helpers->utmUrl( 'https://replace.me', 'plugin-row-meta', 'review' ),
+				'url'   => aioseoTableOfContents()->helpers->utmUrl( 'https://aioseo.com/table-of-contents-plus-rating', 'plugin-row-meta', 'review' ),
 			]
 		];
 

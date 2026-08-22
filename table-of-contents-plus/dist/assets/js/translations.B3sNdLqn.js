@@ -1,1 +1,0 @@
-import{i as e}from"./Button.BJKI3qHE.js";typeof window<`u`&&window.aioseoTranslations?(e(window.aioseoTranslations.translations,`table-of-contents-plus`),window.aioseoTranslationsPro&&window.aioseoTranslationsPro.translationsPro&&e(window.aioseoTranslationsPro.translationsPro,void 0)):typeof window<`u`&&window.aioseo&&console.warn(`AIOSEO translations couldn't be loaded.`);

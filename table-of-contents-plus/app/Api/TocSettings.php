@@ -13,6 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * option, so this controller bridges the Vue settings UI to that store and
  * mirrors the sanitization the legacy admin page used.
  *
+ * Follow-up (tech debt): migrate these user settings onto the modern Options
+ * framework the other AIOSEO plugins use. That store persists on activation and
+ * version-tracks reliably, which would remove the existing-install detection
+ * gymnastics in {@see \AIOSEO\TableOfContents\Main\Updates::migrateAppearanceDefaults()}.
+ *
  * @since 1.0.0
  */
 class TocSettings {
@@ -62,6 +67,11 @@ class TocSettings {
 		$color = function ( $key, $default ) use ( $engine, $body ) {
 			return ! empty( $body[ $key ] ) ? $engine->hex_value( trim( wp_unslash( $body[ $key ] ) ), $default ) : $default;
 		};
+		$enum = function ( $key, $allowed ) use ( $string, $defaults ) {
+			$value = $string( $key );
+
+			return in_array( $value, $allowed, true ) ? $value : $defaults[ $key ];
+		};
 
 		$restrictPath = $string( 'restrict_path' );
 		if ( $restrictPath && 0 !== strpos( $restrictPath, '/' ) ) {
@@ -75,14 +85,17 @@ class TocSettings {
 			'start'                              => $int( 'start' ),
 			'show_heading_text'                  => $bool( 'show_heading_text' ),
 			'heading_text'                       => $string( 'heading_text' ),
+			'heading_alignment'                  => $enum( 'heading_alignment', [ 'left', 'center', 'right' ] ),
 			'auto_insert_post_types'             => self::sanitizeStringArray( $body, 'auto_insert_post_types' ),
 			'show_heirarchy'                     => $bool( 'show_heirarchy' ),
 			'ordered_list'                       => $bool( 'ordered_list' ),
+			'numbering_style'                    => $enum( 'numbering_style', [ 'hierarchical', 'decimal', 'upper-roman', 'lower-roman', 'upper-alpha', 'lower-alpha' ] ),
 			'smooth_scroll'                      => $bool( 'smooth_scroll' ),
 			'smooth_scroll_offset'               => $int( 'smooth_scroll_offset' ),
 			'visibility'                         => $bool( 'visibility' ),
 			'visibility_show'                    => $string( 'visibility_show' ),
 			'visibility_hide'                    => $string( 'visibility_hide' ),
+			'toggle_style'                       => $enum( 'toggle_style', [ 'plus_minus', 'caret', 'brackets' ] ),
 			'visibility_hide_by_default'         => $bool( 'visibility_hide_by_default' ),
 			'width'                              => $string( 'width' ),
 			'width_custom'                       => isset( $body['width_custom'] ) ? floatval( $body['width_custom'] ) : $defaults['width_custom'],

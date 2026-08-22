@@ -4,7 +4,7 @@ Tags: table of contents, toc, index, widget, anchor links
 Requires at least: 5.7
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 202607
+Stable tag: 202608.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,7 @@ When writing about this plugin, please use the correct branding:
 1. The table of contents automatically added to the top of a post, with a numbered outline and smooth-scrolling anchor links.
 2. Display settings: choose which post types get a table of contents, where it appears, and which heading levels to include.
 3. Appearance settings: pick a theme with a live preview, or set your own colors, width, and list style.
+4. Behavior settings: let visitors collapse the table of contents and turn on smooth scrolling.
 
 
 == Installation ==
@@ -167,7 +168,27 @@ Table of Contents Plus was originally created and maintained for many years by M
 
 
 == Changelog ==
-= 202607 – 23 July 2026 =
+= 202608.2 =
+* Released: 21 August 2026
+* Fixed: The Settings and About Us screens were blank after updating to 202608.1
+
+= 202608.1 =
+* Released: 19 August 2026
+* New: Minimize the live preview panel to a small button in the corner for more room while editing
+* Improved: The show/hide link labels now appear directly under the Collapse control, and only when the bracketed link style is selected
+
+= 202607.1 =
+* Released: 25 July 2026
+* New: Numbering style option — hierarchical (1.1.1.), decimal, Roman numerals or letters
+* New: Title alignment option — left, center or right
+* New: Collapse control style — a plus/minus icon, a caret, or the classic show/hide link in brackets
+* New: Live preview panel on the settings screen that updates as you change the appearance options
+* New: Refreshed plugin logo and admin menu icon
+* Fixed: The table of contents no longer appears on the blog posts index page — only on individual posts and pages
+* Fixed: Links in the Black theme are now white
+* Note: Existing sites keep the previous centered title and bracketed show/hide link; new installs use the new left-aligned title and plus/minus toggle
+= 202607 =
+* Released: 22 July 2026
 * New: Completely redesigned settings screen, rebuilt on the All in One SEO framework and reorganized into Display, Appearance, Behavior and Advanced tabs
 * New: Live preview for each table of contents theme so you can see a color scheme before selecting it
 * New: Redesigned About page
@@ -188,3 +209,20 @@ Table of Contents Plus was originally created and maintained for many years by M
 * Fixed: The show/hide toggle now works on sites using translation plugins such as TranslatePress
 * Fixed: The [toc] shortcode now works inside synced (reusable) blocks
 * Fixed: Help link in the settings page now points to the current documentation
+
+= 2411.1 =
+* Released: 21 November 2024
+* Security hardening reported by WPScan
+
+= 2411 =
+* Released: 14 November 2024
+* Security hardening reported by Patchstack
+* Plugin updates for compatibility with Plugin Check
+
+== Upgrade Notice ==
+
+= 202608.2 =
+This update fixes the blank Settings and About Us screens introduced in 202608.1. Updating is recommended for anyone currently on 202608.1.
+
+= 202608.1 =
+This update includes new features, improvements, and bug fixes. We recommend backing up your site before updating; your existing settings are preserved.

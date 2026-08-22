@@ -27,14 +27,17 @@ class Frontend {
 			'start'                              => 3,
 			'show_heading_text'                  => true,
 			'heading_text'                       => 'Contents',
+			'heading_alignment'                  => 'left',
 			'auto_insert_post_types'             => [ 'post', 'page' ],
 			'show_heirarchy'                     => true,
 			'ordered_list'                       => true,
+			'numbering_style'                    => 'hierarchical',
 			'smooth_scroll'                      => true,
 			'smooth_scroll_offset'               => TOC_SMOOTH_SCROLL_OFFSET,
 			'visibility'                         => true,
 			'visibility_show'                    => 'show',
 			'visibility_hide'                    => 'hide',
+			'toggle_style'                       => 'plus_minus',
 			'visibility_hide_by_default'         => false,
 			'width'                              => 'Auto',
 			'width_custom'                       => '275',
@@ -489,6 +492,7 @@ class Frontend {
 			$width                      = ( 'User defined' !== $this->options['width'] ) ? $this->options['width'] : $this->options['width_custom'] . $this->options['width_custom_units'];
 			$js_vars['visibility_show'] = esc_js( wp_kses_post( $this->options['visibility_show'] ) );
 			$js_vars['visibility_hide'] = esc_js( wp_kses_post( $this->options['visibility_hide'] ) );
+			$js_vars['toggle_style']    = esc_js( $this->options['toggle_style'] );
 			if ( $this->options['visibility_hide_by_default'] ) {
 				$js_vars['visibility_hide_by_default'] = true;
 			}
@@ -735,12 +739,25 @@ class Frontend {
 				if ( $this->options['ordered_list'] ) {
 					// attach leading numbers when lower in hierarchy
 					$html .= '<span class="toc_number toc_depth_' . ( $current_depth - $numbered_items_min + 1 ) . '">';
-					for ( $j = $numbered_items_min; $j < $current_depth; $j++ ) {
-						$number = ( $numbered_items[ $j ] ) ? $numbered_items[ $j ] : 0;
-						$html  .= $number . '.';
+
+					$style          = $this->options['numbering_style'];
+					$current_number = $numbered_items[ $current_depth ] + 1;
+
+					if ( 'hierarchical' === $style ) {
+						// Prefix each item with its ancestors, e.g. 1.2.3.
+						for ( $j = $numbered_items_min; $j < $current_depth; $j++ ) {
+							$ancestor = ( $numbered_items[ $j ] ) ? $numbered_items[ $j ] : 0;
+							$html    .= $ancestor . '.';
+						}
+						$html .= $current_number;
+					} else {
+						// The remaining styles restart the count within each level,
+						// formatted as decimal, Roman numerals or letters.
+						$html .= $this->format_number( $current_number, $style );
 					}
 
-					$html .= ( $numbered_items[ $current_depth ] + 1 ) . '</span> ';
+					// Trailing period, matching native ordered-list / outline numbering.
+					$html .= '.</span> ';
 					$numbered_items[ $current_depth ]++;
 				}
 				$html .= wp_strip_all_tags( $matches[ $i ][0] ) . '</a>';
@@ -976,7 +993,7 @@ class Frontend {
 			}
 		} else {
 			if (
-				( in_array( get_post_type( $post ), $this->options['auto_insert_post_types'], true ) && $this->show_toc && ! is_search() && ! is_archive() && ! is_front_page() ) ||
+				( in_array( get_post_type( $post ), $this->options['auto_insert_post_types'], true ) && $this->show_toc && ! is_search() && ! is_archive() && ! is_home() && ! is_front_page() ) ||
 				( $this->options['include_homepage'] && is_front_page() )
 			) {
 				if ( $this->options['restrict_path'] ) {
@@ -1003,6 +1020,81 @@ class Frontend {
 		}
 	}
 
+
+	/**
+	 * Formats a per-level counter for the given numbering style.
+	 *
+	 * @since 202608.2
+	 *
+	 * @param  int    $number The 1-based counter for the current level.
+	 * @param  string $style  The numbering style.
+	 * @return string         The formatted number.
+	 */
+	private function format_number( $number, $style ) {
+		switch ( $style ) {
+			case 'lower-roman':
+				return strtolower( $this->to_roman( $number ) );
+			case 'upper-roman':
+				return $this->to_roman( $number );
+			case 'lower-alpha':
+				return strtolower( $this->to_alpha( $number ) );
+			case 'upper-alpha':
+				return $this->to_alpha( $number );
+			case 'decimal':
+			default:
+				return (string) (int) $number;
+		}
+	}
+
+	/**
+	 * Converts a positive integer to an uppercase Roman numeral.
+	 *
+	 * @since 202608.2
+	 *
+	 * @param  int    $number The number to convert.
+	 * @return string         The Roman numeral, or the number as-is when out of range.
+	 */
+	private function to_roman( $number ) {
+		$number = (int) $number;
+		if ( $number < 1 || $number > 3999 ) {
+			return (string) $number;
+		}
+
+		$map    = [ 'M' => 1000, 'CM' => 900, 'D' => 500, 'CD' => 400, 'C' => 100, 'XC' => 90, 'L' => 50, 'XL' => 40, 'X' => 10, 'IX' => 9, 'V' => 5, 'IV' => 4, 'I' => 1 ];
+		$result = '';
+		foreach ( $map as $roman => $value ) {
+			while ( $number >= $value ) {
+				$result .= $roman;
+				$number -= $value;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Converts a positive integer to an uppercase letter sequence (A, B, …, Z, AA, AB, …).
+	 *
+	 * @since 202608.2
+	 *
+	 * @param  int    $number The number to convert.
+	 * @return string         The letter sequence, or the number as-is when out of range.
+	 */
+	private function to_alpha( $number ) {
+		$number = (int) $number;
+		if ( $number < 1 ) {
+			return (string) $number;
+		}
+
+		$result = '';
+		while ( $number > 0 ) {
+			$number--;
+			$result  = chr( 65 + ( $number % 26 ) ) . $result;
+			$number  = intdiv( $number, 26 );
+		}
+
+		return $result;
+	}
 
 	/**
 	 * Inserts the table of contents before or after the first paragraph in the content.
@@ -1100,6 +1192,12 @@ class Frontend {
 					// Numbered lists show their own numbers, so suppress the list bullets.
 					if ( $this->options['ordered_list'] ) {
 						$css_classes .= ' toc_numbered';
+					}
+
+					// Title alignment. Left is the stylesheet default, so only the
+					// center/right variants need a class.
+					if ( in_array( $this->options['heading_alignment'], [ 'center', 'right' ], true ) ) {
+						$css_classes .= ' toc_title_' . $this->options['heading_alignment'];
 					}
 
 					if ( $this->options['css_container_class'] ) {

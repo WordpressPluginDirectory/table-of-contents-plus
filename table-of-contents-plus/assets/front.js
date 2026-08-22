@@ -136,7 +136,17 @@ jQuery(document).ready(function($) {
 					$.cookie('tocplus_hidetoc', null, { path: window.location.pathname });
 			};
 
-			$('#toc_container .toc_title').append(' <span class="toc_toggle"><span class="toc_brackets">[</span><a href="#">' + ( hidden ? tocplus.visibility_show : tocplus.visibility_hide ) + '</a><span class="toc_brackets">]</span></span>');
+			var toggle_style = ( typeof tocplus.toggle_style != 'undefined' ) ? tocplus.toggle_style : 'brackets';
+			var toggle_label = hidden ? tocplus.visibility_show : tocplus.visibility_hide;
+			var toggle_html;
+			if ( 'brackets' === toggle_style ) {
+				toggle_html = ' <span class="toc_toggle toc_toggle_brackets"><span class="toc_brackets">[</span><a href="#">' + toggle_label + '</a><span class="toc_brackets">]</span></span>';
+			} else {
+				// Plus/minus and caret render a glyph (styled in CSS off the container's
+				// .contracted state); the label lives on aria-label for screen readers.
+				toggle_html = ' <span class="toc_toggle toc_toggle_icon toc_toggle_' + toggle_style + '"><a href="#" role="button" aria-label="' + toggle_label + '"><span class="toc_toggle_indicator" aria-hidden="true"></span></a></span>';
+			}
+			$('#toc_container .toc_title').append(toggle_html);
 			if ( hidden ) {
 				$('ul.toc_list').hide();
 				$('#toc_container').addClass('contracted').shrinkTOCWidth();
@@ -147,7 +157,12 @@ jQuery(document).ready(function($) {
 				// track state via the container class rather than the label text,
 				// which breaks when translation plugins rewrite the DOM
 				var hide = ! $('#toc_container').hasClass('contracted');
-				$(this).html( hide ? tocplus.visibility_show : tocplus.visibility_hide );
+				var label = hide ? tocplus.visibility_show : tocplus.visibility_hide;
+				if ( 'brackets' === toggle_style ) {
+					$(this).html( label );
+				} else {
+					$(this).attr( 'aria-label', label );
+				}
 				save_state( hide );
 				if ( hide ) {
 					$('ul.toc_list').hide('fast');

@@ -35,9 +35,10 @@ class InternalOptions {
 	protected $defaults = [
 		// phpcs:disable WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 		'internal' => [
-			'firstActivated'    => [ 'type' => 'number', 'default' => 0 ],
-			'lastActiveVersion' => [ 'type' => 'string', 'default' => '0.0' ],
-			'lastSchemaVersion' => [ 'type' => 'string', 'default' => '0.0' ],
+			'firstActivated'             => [ 'type' => 'number', 'default' => 0 ],
+			'lastActiveVersion'          => [ 'type' => 'string', 'default' => '0.0' ],
+			'lastSchemaVersion'          => [ 'type' => 'string', 'default' => '0.0' ],
+			'migratedAppearanceDefaults' => [ 'type' => 'boolean', 'default' => false ],
 		]
 		// phpcs:enable WordPress.Arrays.ArrayDeclarationSpacing.AssociativeArrayFound
 	];

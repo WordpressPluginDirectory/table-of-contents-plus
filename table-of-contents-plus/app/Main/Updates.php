@@ -45,6 +45,8 @@ class Updates {
 		if ( version_compare( $lastActiveVersion, '1.0.0', '<' ) ) {
 		}
 
+		$this->migrateAppearanceDefaults();
+
 		// Sync database schema with dbDelta - this will create tables and add missing columns automatically
 		$this->updateDbSchema();
 
@@ -69,6 +71,47 @@ class Updates {
 
 		aioseoTableOfContents()->core->db->bustCache();
 		aioseoTableOfContents()->core->cache->delete( 'db_schema' );
+	}
+
+	/**
+	 * Preserves the pre-existing appearance behaviour for sites that already had the plugin.
+	 *
+	 * New installs default to a left-aligned title and a +/- collapse toggle. Existing
+	 * installs are migrated to the previous centered title and bracketed show/hide link
+	 * so the update doesn't visibly change their table of contents. Runs once, and only
+	 * fills in settings the user never had (never overrides an explicit choice).
+	 *
+	 * @since 202608.2
+	 *
+	 * @return void
+	 */
+	private function migrateAppearanceDefaults() {
+		if ( aioseoTableOfContents()->internalOptions->internal->migratedAppearanceDefaults ) {
+			return;
+		}
+
+		// An install counts as pre-existing if it ran an earlier version (lastActiveVersion
+		// is set) or already saved settings (the option row exists). A brand-new install has
+		// neither and keeps the new defaults. lastActiveVersion is read before
+		// updateLatestVersion() runs later on init, so it still holds the prior version here.
+		$options           = get_option( 'toc-options' );
+		$isExistingInstall = '0.0' !== aioseoTableOfContents()->internalOptions->internal->lastActiveVersion || false !== $options;
+
+		if ( $isExistingInstall ) {
+			if ( ! is_array( $options ) ) {
+				$options = [];
+			}
+			if ( ! array_key_exists( 'heading_alignment', $options ) ) {
+				$options['heading_alignment'] = 'center';
+			}
+			if ( ! array_key_exists( 'toggle_style', $options ) ) {
+				$options['toggle_style'] = 'brackets';
+			}
+
+			update_option( 'toc-options', $options );
+		}
+
+		aioseoTableOfContents()->internalOptions->internal->migratedAppearanceDefaults = true;
 	}
 
 	/**
